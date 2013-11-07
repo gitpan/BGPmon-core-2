@@ -54,9 +54,6 @@ use constant READ_ERROR_MSG =>
   'Could not read from file handle. Error in sysread.';
 use constant SOCKET_TIMEOUT_CODE => 208;
 use constant SOCKET_TIMEOUT_MSG => 'Socket timed out.';
-use constant NON_PRINTABLE_CHARS_CODE => 209;
-use constant NON_PRINTABLE_CHARS_MSG => 
-  'Received XML messages contains non-printable characters';
 use constant ARGUMENT_ERROR_CODE => 297;
 use constant ARGUMENT_ERROR_MSG => 'Invalid number of arguments.';
 use constant INVALID_FUNCTION_SPECIFIED_CODE => 298;
@@ -209,7 +206,7 @@ This function reads one xml message at a time from the BGPmon XML stream.
 =cut
 
 sub read_xml_message {
-    my $complete_xml_msg = undef;
+    my $complete_xml_msg = "";
     my $fname = 'read_xml_message';
 
     # Check if we are connected to a server
@@ -223,7 +220,7 @@ sub read_xml_message {
     my $bytesread = 0;
     my @ready = $sel->can_read($socket_timeout);
 
-    # If there is a socket with data, read data from the socket.
+    # If there is a socket with data.
     if (scalar(@ready) > 0) {
         while ($read_buffer !~ /<BGP_MONITOR_MESSAGE.*?BGP_MONITOR_MESSAGE>/) {
             $bytesread = sysread($sock, $tempbuf, $chunksize);
@@ -240,13 +237,6 @@ sub read_xml_message {
                 return undef;
             }
             $read_buffer .= $tempbuf;
-        }
-
-        # check if message contains only ASCII printable characters
-        unless ($read_buffer =~ /[[:print:]]/) {
-            $error_code{$fname} = NON_PRINTABLE_CHARS_CODE;
-            $error_msg{$fname} = NON_PRINTABLE_CHARS_MSG;
-            return undef;
         }
 
         # at this point I have a complete message OR my socket closed
