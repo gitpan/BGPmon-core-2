@@ -7,7 +7,7 @@ my @exec_files = qw();
 
 WriteMakefile(
     NAME              => 'BGPmon',
-    VERSION_FROM      => 'lib/BGPmon/Log.pm', # finds $VERSION
+    VERSION_FROM      => 'VERSION', # finds $VERSION
     EXE_FILES         => [],
     PREREQ_PM         => {'Test'        =>  0,
                           'Sys::Syslog' => 0,
@@ -18,8 +18,8 @@ WriteMakefile(
                           'File::Path' => 0,
                           'IO::Socket' => 0,
                           'IO::Select' => 0,
+                          'LWP::Simple' => 6.00,
                           'XML::LibXML' => 1.89,
-                          'WWW::Curl::Easy' => 4.15,
                           'XML::LibXML::Simple' => 0.92,
                           'Net::IP' => 1.25,
                           'IO::Uncompress::AnyUncompress' => 0,

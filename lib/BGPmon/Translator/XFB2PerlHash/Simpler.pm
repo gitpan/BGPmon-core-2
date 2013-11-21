@@ -146,6 +146,7 @@ sub parse_xml_msg{
   if($xmlMsg eq ""){
     $error_code{$fname} = BLANK_MESSAGE_GIVEN;
     $error_msg{$fname} = BLANK_MESSAGE_GIVEN_MSG;
+    return 1;
   }
 
   $msgHash = BGPmon::Translator::XFB2PerlHash::translate_msg($xmlMsg);

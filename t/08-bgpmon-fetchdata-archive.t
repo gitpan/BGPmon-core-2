@@ -75,14 +75,14 @@ is($ret,0,"close_connection - close valid connection");
 ##################### Error conditions ########################################
 #Test with no arguments
 $ret = BGPmon::Fetch::Archive::download_URL();
-ok( !defined($ret), "download_URL - no argument");
+ok( $ret == 1, "download_URL - no argument");
 is(BGPmon::Fetch::Archive::get_error_code("download_URL"),401,
 "download_URL - missing arguments");
 
 #Test invalid URL
 $ret = BGPmon::Fetch::Archive::download_URL("xml://archive.netsec.colostate.edu/collectors/bgpdata-netsec/2012.06/updates.20120601.2214.bgpdata-netsec.xml.bz2",
 "/tmp/BGP.Archive.$$/gonna_fail.bz2");
-ok( !defined($ret), "download_URL - invalid URL");
+ok( $ret == 1, "download_URL - invalid URL");
 is(BGPmon::Fetch::Archive::get_error_code("download_URL"),409,
 "download_URL - invalid_URL");
 

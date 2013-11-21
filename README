@@ -49,7 +49,7 @@ This module requires these other modules and libraries:
   IO::Socket
   XML::LibXML
   XML::LibXML::Simple
-  WWW::Curl::Easy
+  LWP::Simple
   Net::IP
 
 COPYRIGHT AND LICENCE

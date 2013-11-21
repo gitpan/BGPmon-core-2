@@ -1,14 +1,14 @@
 package BGPmon::Fetch::Archive;
 our $VERSION = '2.0';
 
-use 5.006;
 use strict;
 use warnings;
 use POSIX qw/strftime/;
 use File::Path qw/mkpath rmtree/;
 use BGPmon::Translator::XFB2PerlHash;
 use BGPmon::Fetch::File;
-use WWW::Curl::Easy;
+use LWP::Simple;
+use Data::Dumper;
 
 BEGIN{
 require Exporter;
@@ -234,15 +234,19 @@ Usage:      my $ret = connect_archive(
 sub connect_archive {
 
     #Store arguments in state variables
-    my ($url, $begin, $end) = @_;
+    my $url = shift;
+    my $begin = shift;
+    my $end = shift;
+
     my $fname = "connect_archive";
 
     #Check for correct number of variables
-    if( scalar(@_) < 3 ){
+    if(!defined($url) or !defined($begin) or !defined($end)){
         $error_code{$fname} = UNDEFINED_ARGUMENT_CODE;
         $error_msg{$fname} = UNDEFINED_ARGUMENT_MSG;
         return 1;
     }
+    
 
     #Check to make sure we aren't already connected to an archive
     if(is_connected()){
@@ -834,55 +838,38 @@ sub validateIndex{
 #
 #Downloads a target file and saves it to a user-specified file
 #This function is primarily a wrapper around several functions of
-# the WWW::Curl module.
+# the LWP::Simple module.
 #Input:        a target URL, either an HTML index or another file
 #              an output file name
-#Output:       0 on success, undef on failure
+#Output:       0 on success, 1 on failure
 
 sub download_URL{
     my $fname = "download_URL";
-    #Initialize a libcurl object so we can do cool stuff
-    #with curl like error handling.
-    my $curl = WWW::Curl::Easy->new;
-    my $dl_fh = undef;
 
     #Get argument(s) and check that they exist
     my $target_url = shift;
     my $output = shift;
 
     #If the target is not defined, obviously that is a problem
-    if(!defined($target_url) || !defined($output) ){
+    if(!defined($target_url) || $target_url eq "" || 
+       !defined($output) || $output eq "" ){
         $error_code{$fname} = UNDEFINED_ARGUMENT_CODE;
         $error_msg{$fname} = UNDEFINED_ARGUMENT_MSG;
-        return undef;
-    }
-    else{
-        #Open a local filehandle for the output file
-        unless(open($dl_fh,">","$output") ){
-            $error_code{$fname} = FILE_OPERATION_FAIL_CODE;
-            $error_msg{$fname} = FILE_OPERATION_FAIL_MSG.": $@";
-            return undef;
-        }
-        #If the URL exists, set curl's download target and output file
-        #and also tell curl to suppress it's progress meter
-        $curl->setopt(CURLOPT_URL,"$target_url");
-        $curl->setopt(CURLOPT_WRITEDATA,$dl_fh);
-        $curl->setopt(CURLOPT_NOPROGRESS,1);
+        return 1;
     }
 
-    #Call curl to download the specified file into the given output file
-    my $ret = $curl->perform;
-    #If curl fails, log the reason why
-    if($ret){
+    if($target_url !~ m/http/){
+      $target_url = "http://".$target_url;
+    }
+
+    ## Download the specified file into the given output file
+    my $ret = LWP::Simple::getstore($target_url, $output);
+    #If grabbing the url fails, log the reason why
+    if(LWP::Simple::is_error($ret)){
         $error_code{$fname} = DOWNLOAD_FAIL_CODE;
-        $error_msg{$fname} = DOWNLOAD_FAIL_MSG.$curl->strerror($ret)." "
-.$curl->errbuf;
-        close $dl_fh;
-        return undef;
+        $error_msg{$fname} = DOWNLOAD_FAIL_MSG.$ret." ";
+        return 1;
     }
-
-    #Close the open filehandle
-    close $dl_fh;
     return 0;
 }
 
@@ -979,8 +966,8 @@ Copyright (c) 2012 Colorado State University
 
     File: Archive.pm
 
-    Authors: Jason Bartlett, Kaustubh Gadkari, Dan Massey, Cathie Olschanowsky
-    Date: 10 October 2013
+    Authors: M. Lawrence Weikum, Jason Bartlett, Kaustubh Gadkari, Dan Massey, Cathie Olschanowsky
+    Date: 20 November 2013
 
 =cut
 
